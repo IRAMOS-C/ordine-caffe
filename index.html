@@ -333,7 +333,7 @@
 <div class="statusbar">
   <div class="dot yellow" id="statusDot"></div>
   <span id="statusText">Inizializzazione...</span>
-  <span style="margin-left:auto;font-size:11px;color:var(--text3)">IVA inclusa +10% · Referente: IVAN RAMOS-C. · Via Bonzanigo 22, Torino — Presso SATAP</span>
+  <span style="margin-left:auto;font-size:11px;color:var(--text3)">Catalogo: prezzi IVA esclusa · Ordini: IVA inclusa +10% · Referente: IVAN RAMOS-C. · Via Bonzanigo 22, Torino — Presso SATAP</span>
 </div>
 
 <!-- Layout -->
@@ -574,13 +574,16 @@ function renderProducts(){
   list.forEach(p=>{
     const idx=PRODUCTS.indexOf(p);
     if(p.cat!==lastCat){ html+=`<div class="cat-header">${CAT_LABELS[p.cat]||p.cat}</div>`; lastCat=p.cat; }
-    const tc=totC(p,1);
+    // Catalogo: prezzi senza IVA
+    const priceEx = p.pricePerConf ? p.price : p.price;
+    const tcEx = p.pricePerConf ? p.price : +(p.price*p.pzConf).toFixed(2);
+    const priceExTag = p.pricePerConf ? eur(priceEx)+" /conf" : eur(priceEx)+" /cad";
     html+=`<div class="prod-row">
       <div>
         <div class="prod-name">${p.name}</div>
-        <div class="prod-meta">${p.pzConf} pz/conf · ${priceTag(p)} · ${eur(tc)}/conf</div>
+        <div class="prod-meta">${p.pzConf} pz/conf · ${priceExTag} (IVA escl.) · ${eur(tcEx)}/conf</div>
       </div>
-      <div class="prod-price-tag">${priceTag(p)}</div>
+      <div class="prod-price-tag" style="font-size:11px">${priceExTag}<br><span style="color:var(--text3);font-size:10px">+IVA 10%</span></div>
       <div class="qty-wrap"><input class="qty-inp" type="number" min="1" id="qty_${idx}" placeholder="conf."></div>
       <button class="add-btn" onclick="addToCart(${idx})" title="Aggiungi">+</button>
     </div>`;
@@ -727,8 +730,8 @@ function headerHTML(today){
     <td style="padding:2px 5px 1px;font-size:7pt;font-weight:bold;color:${NAVY}">DATA CONSEGNA</td>
   </tr><tr>
     <td style="height:16px;padding:2px 5px;font-size:9pt;font-weight:bold;color:${NAVY};border-top:0.5px solid #AAA;border-right:0.5px solid #AAA">IVAN RAMOS-C.</td>
-    <td style="border-top:0.5px solid #AAA;border-right:0.5px solid #AAA"></td>
-    <td style="border-top:0.5px solid #AAA;padding:2px 5px;font-size:9pt">${today}</td>
+    <td style="height:16px;padding:2px 5px;font-size:9pt;font-weight:bold;color:${NAVY};border-top:0.5px solid #AAA;border-right:0.5px solid #AAA">335 324532</td>
+    <td style="border-top:0.5px solid #AAA"></td>
   </tr></table>`;
 }
 
@@ -739,15 +742,17 @@ function printFornitore(){
   let rows="",lc="",gt=0,tc=0;
   PRODUCTS.forEach((p,i)=>{
     if(p.cat!==lc){ rows+=`<tr><td colspan="5" style="background:${GRAY};font-weight:bold;color:${NAVY};padding:4px 6px;font-size:9pt">${CAT_LABELS[p.cat]||p.cat}</td></tr>`; lc=p.cat; }
-    const qty=agg[i]||0,pa=piva(p),tot=totC(p,qty);
-    gt+=tot; tc+=qty;
-    const paDisplay = p.pricePerConf ? eur(pa)+" /cf" : eur(pa);
+    const qty=agg[i]||0;
+    const paEx = p.price; // prezzo senza IVA
+    const totEx = p.pricePerConf ? +(p.price*qty).toFixed(2) : +(p.price*p.pzConf*qty).toFixed(2);
+    gt+=totEx; tc+=qty;
+    const paDisplay = p.pricePerConf ? eur(paEx)+" /cf" : eur(paEx);
     rows+=`<tr style="background:${i%2===0?"#F5F5F5":"#FFF"}">
       <td style="padding:3px 6px;font-size:8pt">${p.name}</td>
       <td style="text-align:center;font-size:8pt">${p.pzConf}</td>
       <td style="text-align:center;font-size:8.5pt;font-weight:${qty?"bold":"normal"}">${qty||""}</td>
       <td style="text-align:right;font-size:8pt">${paDisplay}</td>
-      <td style="text-align:right;font-size:8pt;font-weight:${qty?"bold":"normal"}">${qty?eur(tot):eur(0)}</td>
+      <td style="text-align:right;font-size:8pt;font-weight:${qty?"bold":"normal"}">${qty?eur(totEx):eur(0)}</td>
     </tr>`;
   });
   openWin(`<!DOCTYPE html><html lang="it"><head><meta charset="utf-8"><title>Ordine Gavio ${today}</title>
@@ -757,16 +762,16 @@ function printFornitore(){
     <th style="color:white;padding:5px 6px;text-align:left;font-size:8pt;width:48%">DESCRIZIONE PRODOTTO</th>
     <th style="color:white;padding:5px 4px;text-align:center;font-size:7.5pt;width:9%">PZ. PER<br>CONF.</th>
     <th style="color:white;padding:5px 4px;text-align:center;font-size:7.5pt;width:13%">QUANTITA'<br>(n. confezioni)</th>
-    <th style="color:white;padding:5px 4px;text-align:right;font-size:7.5pt;width:15%">PREZZO CAD.<br>IVA incl. (+10%)</th>
-    <th style="color:white;padding:5px 4px;text-align:right;font-size:7.5pt;width:15%">TOTALE<br>IVA inclusa</th>
+    <th style="color:white;padding:5px 4px;text-align:right;font-size:7.5pt;width:15%">PREZZO CAD.<br>IVA esclusa</th>
+    <th style="color:white;padding:5px 4px;text-align:right;font-size:7.5pt;width:15%">TOTALE<br>IVA esclusa</th>
   </tr></thead><tbody>${rows}
     <tr style="background:${NAVY}">
-      <td colspan="2" style="color:white;font-weight:bold;padding:5px 6px;font-size:9pt">TOTALE IVA inclusa</td>
+      <td colspan="2" style="color:white;font-weight:bold;padding:5px 6px;font-size:9pt">TOTALE IVA esclusa</td>
       <td style="color:white;font-weight:bold;text-align:center;font-size:9pt">${tc}</td><td></td>
       <td style="color:white;font-weight:bold;text-align:right;font-size:9pt">${eur(gt)}</td>
     </tr>
   </tbody></table>
-  <p style="font-size:7pt;color:#666;margin-top:5px">* Prezzi IVA inclusa al 10%. I prezzi al fornitore sono IVA esclusa.</p>
+  <p style="font-size:7pt;color:#666;margin-top:5px">* Prezzi IVA esclusa.</p>
   <div class="np" style="margin-top:20px;text-align:center">
     <button onclick="window.print()" style="padding:10px 30px;background:${NAVY};color:white;border:none;border-radius:6px;font-size:14px;cursor:pointer">Salva come PDF / Stampa</button>
   </div></body></html>`);
