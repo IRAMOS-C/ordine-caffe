@@ -825,11 +825,6 @@ document.getElementById("selUser").addEventListener("change",()=>{ updateBadges(
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 async function init(){
-  loadConfig();
-  if(!apiKey||!binId){
-    document.getElementById("configNotice").classList.remove("hidden");
-    setStatus("red","Storage non configurato — clicca ⚙ Config per attivare la condivisione");
-  }
   await loadOrders();
   buildSidebarCats();
   buildChips();
