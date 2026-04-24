@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ordini Caffè — Gavio 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --navy: #1F3864;
+    --red:  #C00000;
+    --gray-cat: #D9D9D9;
+    --bg:   #F7F6F3;
+    --surface: #FFFFFF;
+    --border: #E2DED8;
+    --border2: #CCCAC4;
+    --text:  #1A1814;
+    --text2: #6B6760;
+    --text3: #9C9891;
+    --accent: #1F3864;
+    --accent-light: #EDF0F7;
+    --green: #1A6B3C;
+    --green-bg: #EDFAF3;
+    --red-bg: #FDF0F0;
+    --yellow: #92660A;
+    --yellow-bg: #FEF8EC;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── Topbar ── */
+  .topbar {
+    background: var(--navy);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 52px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .topbar-logo {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .topbar-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: white;
+    letter-spacing: 0.02em;
+  }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .user-select {
+    height: 32px;
+    padding: 0 10px;
+    border-radius: var(--radius);
+    border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.1);
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    min-width: 140px;
+  }
+  .user-select option { background: var(--navy); color: white; }
+
+  /* ── Status bar ── */
+  .statusbar {
+    padding: 8px 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; transition: background 0.3s; }
+  .dot.green { background: #22c55e; }
+  .dot.yellow { background: #f59e0b; animation: pulse 1.5s infinite; }
+  .dot.red { background: #ef4444; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── Layout ── */
+  .layout { display: flex; max-width: 1100px; margin: 0 auto; }
+  .sidebar {
+    width: 200px;
+    flex-shrink: 0;
+    padding: 20px 0;
+    position: sticky;
+    top: 52px;
+    height: calc(100vh - 52px);
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .main { flex: 1; padding: 24px; min-width: 0; }
+
+  /* ── Sidebar nav ── */
+  .nav-section { padding: 0 12px; margin-bottom: 4px; }
+  .nav-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; padding: 8px 8px 4px; }
+  .nav-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 10px; border-radius: var(--radius); cursor: pointer;
+    font-size: 13px; color: var(--text2); transition: all 0.15s;
+    border: 1px solid transparent; margin-bottom: 2px;
+  }
+  .nav-item:hover { background: var(--bg); color: var(--text); }
+  .nav-item.active { background: var(--accent-light); color: var(--accent); font-weight: 500; border-color: rgba(31,56,100,0.12); }
+  .nav-badge { background: var(--accent); color: white; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 600; font-family: 'DM Mono', monospace; }
+  .nav-divider { height: 1px; background: var(--border); margin: 8px 12px; }
+
+  /* ── Page header ── */
+  .page-header { margin-bottom: 20px; }
+  .page-title { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .page-sub { font-size: 13px; color: var(--text2); }
+
+  /* ── Filter chips ── */
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .chip {
+    padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border2);
+    font-size: 12px; cursor: pointer; color: var(--text2); background: var(--surface);
+    transition: all 0.15s; font-family: 'DM Sans', sans-serif;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* ── Cat header ── */
+  .cat-header {
+    font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase;
+    letter-spacing: 0.08em; padding: 12px 0 6px; border-bottom: 1px solid var(--border);
+    margin-bottom: 2px; margin-top: 8px;
+  }
+  .cat-header:first-child { margin-top: 0; }
+
+  /* ── Product row ── */
+  .prod-row {
+    display: grid; grid-template-columns: 1fr 90px 90px 36px;
+    align-items: center; gap: 10px; padding: 8px 0;
+    border-bottom: 1px solid var(--border); transition: background 0.1s;
+  }
+  .prod-row:last-child { border-bottom: none; }
+  .prod-row:hover { background: var(--bg); margin: 0 -8px; padding: 8px 8px; border-radius: 6px; }
+  .prod-name { font-size: 13px; font-weight: 400; }
+  .prod-meta { font-size: 11px; color: var(--text3); margin-top: 1px; font-family: 'DM Mono', monospace; }
+  .prod-price-tag {
+    font-size: 12px; font-family: 'DM Mono', monospace; color: var(--text2);
+    text-align: right; white-space: nowrap;
+  }
+  .qty-wrap { display: flex; align-items: center; }
+  .qty-inp {
+    width: 80px; height: 30px; text-align: center; border-radius: var(--radius);
+    border: 1px solid var(--border2); background: var(--surface);
+    color: var(--text); font-size: 13px; font-family: 'DM Mono', monospace;
+    transition: border-color 0.15s;
+  }
+  .qty-inp:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+  .add-btn {
+    width: 30px; height: 30px; border-radius: var(--radius); border: 1px solid var(--border2);
+    background: var(--surface); color: var(--text2); font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+    line-height: 1;
+  }
+  .add-btn:hover { background: var(--accent); color: white; border-color: var(--accent); transform: scale(1.05); }
+  .add-btn:active { transform: scale(0.97); }
+
+  /* ── Cart ── */
+  .cart-hdr {
+    display: grid; grid-template-columns: 1fr 56px 68px 84px 32px; gap: 8px;
+    font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase;
+    letter-spacing: 0.06em; padding: 6px 0; border-bottom: 1px solid var(--border2);
+  }
+  .cart-row {
+    display: grid; grid-template-columns: 1fr 56px 68px 84px 32px; align-items: center;
+    gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+  }
+  .cart-row:last-child { border-bottom: none; }
+  .rm-btn {
+    width: 26px; height: 26px; border-radius: var(--radius); border: 1px solid #FECACA;
+    background: var(--red-bg); color: #DC2626; font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+  }
+  .rm-btn:hover { background: #DC2626; color: white; border-color: #DC2626; }
+
+  /* ── Total card ── */
+  .total-card {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 16px; padding: 14px 18px; background: var(--accent-light);
+    border-radius: var(--radius-lg); border: 1px solid rgba(31,56,100,0.15);
+  }
+  .total-label { font-size: 13px; color: var(--accent); }
+  .total-amount { font-size: 20px; font-weight: 600; color: var(--accent); font-family: 'DM Mono', monospace; }
+
+  /* ── Grand total ── */
+  .grand-card {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; background: var(--surface); border-radius: var(--radius-lg);
+    border: 1px solid var(--border2); margin-top: 12px; box-shadow: var(--shadow);
+  }
+
+  /* ── Person card ── */
+  .person-card {
+    padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg);
+    background: var(--surface); margin-bottom: 10px; box-shadow: var(--shadow);
+  }
+  .person-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .person-name { font-size: 14px; font-weight: 600; }
+  .person-tot { font-size: 14px; font-weight: 600; color: var(--accent); font-family: 'DM Mono', monospace; }
+  .person-item { font-size: 12px; color: var(--text2); padding: 2px 0; }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 36px; padding: 0 16px; border-radius: var(--radius);
+    border: 1px solid var(--border2); background: var(--surface);
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px;
+    font-weight: 500; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .btn:hover { background: var(--bg); box-shadow: var(--shadow); }
+  .btn-green { background: var(--green-bg); color: var(--green); border-color: #BBF7D0; }
+  .btn-green:hover { background: var(--green); color: white; border-color: var(--green); }
+  .btn-blue { background: var(--accent-light); color: var(--accent); border-color: rgba(31,56,100,0.2); }
+  .btn-blue:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn-red { background: var(--red-bg); color: #DC2626; border-color: #FECACA; }
+  .btn-red:hover { background: #DC2626; color: white; border-color: #DC2626; }
+  .actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .actions-label { font-size: 11px; color: var(--text3); width: 100%; margin-top: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* ── Empty ── */
+  .empty { padding: 48px 0; text-align: center; color: var(--text3); font-size: 13px; }
+  .empty-icon { font-size: 32px; display: block; margin-bottom: 8px; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 999;
+    background: var(--text); color: white; padding: 10px 18px;
+    border-radius: var(--radius-lg); font-size: 13px; font-weight: 500;
+    opacity: 0; transform: translateY(8px); transition: all 0.25s;
+    pointer-events: none; box-shadow: var(--shadow-md); max-width: 320px;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ── Config modal ── */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .overlay.show { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface); border-radius: var(--radius-lg); padding: 28px;
+    width: 480px; max-width: 95vw; box-shadow: var(--shadow-md);
+    transform: translateY(12px); transition: transform 0.2s;
+  }
+  .overlay.show .modal { transform: translateY(0); }
+  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .modal-sub { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; display: block; }
+  .form-input {
+    width: 100%; height: 38px; padding: 0 12px; border-radius: var(--radius);
+    border: 1px solid var(--border2); background: var(--bg);
+    font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text);
+    margin-bottom: 14px;
+  }
+  .form-input:focus { outline: none; border-color: var(--accent); background: white; box-shadow: 0 0 0 3px var(--accent-light); }
+  .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+
+  /* ── Section title ── */
+  .sec-title {
+    font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase;
+    letter-spacing: 0.08em; padding: 16px 0 8px; border-bottom: 1px solid var(--border); margin-bottom: 12px;
+  }
+  .sec-title:first-child { padding-top: 0; }
+
+  /* ── Config notice ── */
+  .config-notice {
+    background: var(--yellow-bg); border: 1px solid #FDE68A; border-radius: var(--radius-lg);
+    padding: 14px 16px; margin-bottom: 20px; font-size: 13px; color: var(--yellow);
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .config-notice.hidden { display: none; }
+
+  @media (max-width: 700px) {
+    .sidebar { display: none; }
+    .main { padding: 16px; }
+    .topbar { padding: 0 16px; }
+    .topbar-title { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="topbar-logo">Prezzi 2026</div>
+  <div class="topbar-title">Ordini Caffè</div>
+  <div class="topbar-right">
+    <select class="user-select" id="selUser">
+      <option value="">— Seleziona nome —</option>
+      <option>D.MUGNAINI</option><option>I.RAMOS-C.</option><option>G.BECHIS</option>
+      <option>D.MAZZOTTA</option><option>L.BEVILACQUA</option><option>S.TABASSO</option>
+      <option>D.CANOLA</option><option>D.BARBATI</option><option>S.BRANCIFORTE</option>
+      <option>F.CIGNETTI</option><option>A.BAIETTO</option><option>R.VOLPE</option>
+      <option>A.IPPOLITO</option><option>S.IPPOLITO</option>
+    </select>
+
+  </div>
+</div>
+
+<!-- Status bar -->
+<div class="statusbar">
+  <div class="dot yellow" id="statusDot"></div>
+  <span id="statusText">Inizializzazione...</span>
+  <span style="margin-left:auto;font-size:11px;color:var(--text3)">IVA inclusa +10% · Referente: IVAN RAMOS-C. · Via Bonzanigo 22, Torino — Presso SATAP</span>
+</div>
+
+<!-- Layout -->
+<div class="layout">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="nav-section">
+      <div class="nav-label">Navigazione</div>
+      <div class="nav-item active" id="nav-catalog" onclick="showTab('catalog')">
+        <span>☕ Catalogo</span>
+      </div>
+      <div class="nav-item" id="nav-mycart" onclick="showTab('mycart')">
+        <span>🛒 Il mio ordine</span>
+        <span class="nav-badge" id="myBadge">0</span>
+      </div>
+      <div class="nav-item" id="nav-allorders" onclick="showTab('allorders')">
+        <span>📋 Ordine complessivo</span>
+        <span class="nav-badge" id="allBadge">0</span>
+      </div>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-section">
+      <div class="nav-label">Categorie</div>
+      <div id="sidebarCats"></div>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <main class="main">
+
+
+    <div id="tab-catalog">
+      <div class="page-header">
+        <div class="page-title">Catalogo prodotti</div>
+        <div class="page-sub">Seleziona il tuo nome in alto, inserisci le confezioni e clicca +</div>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div id="productList"></div>
+    </div>
+
+    <div id="tab-mycart" style="display:none">
+      <div class="page-header">
+        <div class="page-title">Il mio ordine</div>
+        <div class="page-sub">Le tue richieste per questo ciclo</div>
+      </div>
+      <div id="myCartContent"></div>
+    </div>
+
+    <div id="tab-allorders" style="display:none">
+      <div class="page-header">
+        <div class="page-title">Ordine complessivo</div>
+        <div class="page-sub" id="lastRefresh">—</div>
+      </div>
+      <div id="allOrdersContent"></div>
+    </div>
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+const IVA = 0.10;
+const NAVY="#1F3864", RED="#C00000", GRAY="#D9D9D9";
+
+const PRODUCTS = [
+  {cat:"Acqua", name:"ACQUA PET 500ML FRIZZANTE", pzConf:24, price:0.30},
+  {cat:"Acqua", name:"ACQUA PET 500ML NATURALE", pzConf:24, price:0.30},
+  {cat:"Bicchieri", name:"BICCHIERI DI CARTA 100 CC", pzConf:50, price:2.50},
+  {cat:"Bicchieri", name:"BICCHIERI DI CARTA BIO 160 CC", pzConf:100, price:5.00},
+  {cat:"Illy Iperespresso", name:"ILLY ESPRESSO CLASSICO", pzConf:30, price:0.41},
+  {cat:"Illy Iperespresso", name:"ILLY ESPRESSO LUNGO", pzConf:30, price:0.41},
+  {cat:"Illy Iperespresso", name:"ILLY ESPRESSO INTENSO", pzConf:30, price:0.41},
+  {cat:"Illy Iperespresso", name:"ILLY ESPRESSO DECAFFEINATO", pzConf:18, price:0.41},
+  {cat:"Illy Iperespresso", name:"ILLY ESPRESSO MONOARABICA ETIOPIA", pzConf:18, price:0.41},
+  {cat:"Illy Iperespresso", name:"ILLY ESPRESSO MONOARABICA GUATEMALA", pzConf:18, price:0.41},
+  {cat:"Illy Iperespresso", name:"ILLY ESPRESSO MONOARABICA BRASILE", pzConf:18, price:0.41},
+  {cat:"Illy Iperespresso", name:"ILLY ORZO ESPRESSO", pzConf:25, price:0.41},
+  {cat:"Illy Iperespresso", name:"ILLY ORZO E GINSENG", pzConf:25, price:0.41},
+  {cat:"Lavazza Espresso Point", name:"CIALDA LAVAZZA CAFFE' CREMA AROMA", pzConf:100, price:0.31},
+  {cat:"Lavazza Espresso Point", name:"CIALDA LAVAZZA CAFFE' AROMA POINT", pzConf:100, price:0.31},
+  {cat:"Lavazza Espresso Point", name:"CIALDA LAVAZZA CAFFE' AROMA CLUB", pzConf:100, price:0.31},
+  {cat:"Lavazza Espresso Point", name:"CIALDA LAVAZZA CAFFE' TIERRA", pzConf:100, price:0.31},
+  {cat:"Lavazza Espresso Point", name:"CIALDA LAVAZZA LATTE", pzConf:50, price:0.31},
+  {cat:"Lavazza Espresso Point", name:"CIALDA LAVAZZA CAFFE' ORZO", pzConf:50, price:0.31},
+  {cat:"Lavazza Espresso Point", name:"CIALDA LAVAZZA CAFFE' DECAFFEINATO I", pzConf:50, price:0.31},
+  {cat:"Lavazza Espresso Point", name:"CIALDA LAVAZZA THE LIMONE", pzConf:50, price:0.31},
+  {cat:"Lavazza Firma", name:"CIALDA LAVAZZA FIRMA NAPOLI", pzConf:48, price:0.39},
+  {cat:"Lavazza Firma", name:"CIALDA LAVAZZA FIRMA TORINO", pzConf:48, price:0.39},
+  {cat:"Lavazza Firma", name:"CIALDA LAVAZZA FIRMA TORINO LUNGO", pzConf:48, price:0.39},
+  {cat:"Lavazza Firma", name:"CIALDA LAVAZZA FIRMA ROMA", pzConf:48, price:0.39},
+  {cat:"Lavazza Firma", name:"CIALDA LAVAZZA FIRMA ESPRESSO PAULISTA", pzConf:48, price:0.39},
+  {cat:"Lavazza Firma", name:"CIALDA LAVAZZA FIRMA ESPRESSO CREMA E GUSTO CLASSICO", pzConf:48, price:0.39},
+  {cat:"Lavazza Firma", name:"CIALDA LAVAZZA FIRMA ESPRESSO DECAFFEINATO", pzConf:24, price:0.34},
+  {cat:"Lavazza Firma", name:"CIALDA LAVAZZA FIRMA QUALITA' ROSSA", pzConf:48, price:0.39},
+  {cat:"Lavazza Firma", name:"CIALDA LAVAZZA FIRMA QUALITA' ORO", pzConf:48, price:0.39},
+  {cat:"Lavazza Firma", name:"CIALDA LAVAZZA FIRMA ESPRESSO GUSTOSO", pzConf:48, price:0.34},
+  {cat:"Lavazza Firma", name:"CIALDA LAVAZZA FIRMA CREMA & GUSTO FORTE", pzConf:48, price:0.39},
+  {cat:"Lavazza Firma", name:"CIALDA LAVAZZA FIRMA TIERRA BIO AROMATICO - compostabile", pzConf:48, price:0.39},
+  {cat:"Lavazza Firma", name:"CIALDA LAVAZZA FIRMA TIERRA BIO INTENSO - compostabile", pzConf:48, price:0.39},
+  {cat:"Lavazza Firma", name:"CIALDA LAVAZZA FIRMA THE LIMONE", pzConf:24, price:0.34},
+  {cat:"Lavazza Firma", name:"CIALDA LAVAZZA FIRMA LATTE", pzConf:24, price:0.34},
+  {cat:"Lavazza Firma", name:"CIALDA LAVAZZA FIRMA CAFFE' ORZO", pzConf:24, price:0.34},
+  {cat:"Lavazza Firma", name:"CIALDA LAVAZZA FIRMA GINSENG", pzConf:24, price:0.34},
+  {cat:"Nespresso", name:"CIALDA NESPRESSO CAFFE' ESPRESSO FORTE", pzConf:50, price:0.41},
+  {cat:"Nespresso", name:"CIALDA NESPRESSO CAFFE ESPRESSO LEGGERO", pzConf:50, price:0.41},
+  {cat:"Nespresso", name:"CIALDA NESPRESSO CAFFE' DECAFFEINATO", pzConf:50, price:0.41},
+  {cat:"Nespresso", name:"CIALDA NESPRESSO RISTRETTO ORIGIN INDIA", pzConf:50, price:0.41},
+  {cat:"Accessori", name:"ACCESSORI 50 palette + 50 zucchero + 50 palette", pzConf:1, price:2.50},
+];
+
+const CATS = [...new Set(PRODUCTS.map(p=>p.cat))];
+const CAT_LABELS = {
+  "Acqua":"ACQUA","Bicchieri":"BICCHIERI",
+  "Illy Iperespresso":"CIALDE MODELLO - ILLY IPERESPRESSO",
+  "Lavazza Espresso Point":"CIALDE MODELLO - LAVAZZA ESPRESSO POINT",
+  "Lavazza Firma":"CIALDE MODELLO - LAVAZZA FIRMA",
+  "Nespresso":"CIALDE MODELLO - NESPRESSO",
+  "Accessori":"ACCESSORI"
+};
+
+let activeCat="Tutti", orders={}, activeTab="catalog";
+const GAS_URL="https://script.google.com/macros/s/AKfycbxyI59YM9bg6KuxX2CnQFfvDse38ZuYY0UsvfPUPZVkcPhzg4G0vyUbWRyL__8kdloZ/exec";
+
+function piva(p){ return +(p.price*(1+IVA)).toFixed(4); }
+function totC(p,q){ return +(piva(p)*p.pzConf*q).toFixed(2); }
+function eur(v){ return "€ "+v.toFixed(2).replace(".",","); }
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+async function init(){
+  await loadOrders();
+  buildSidebarCats();
+  buildChips();
+  renderProducts();
+  updateBadges();
+  // Auto-refresh ogni 2 minuti
+  setInterval(()=>{ if(activeTab==="allorders") loadOrders().then(renderAllOrders); else loadOrders(); }, 120000);
+}
+init();
+
+// ─── Storage JSONbin ──────────────────────────────────────────────────────────
+function setStatus(state, msg){
+  const dot=document.getElementById("statusDot");
+  const txt=document.getElementById("statusText");
+  dot.className="dot "+(state==="ok"?"green":state==="saving"?"yellow":"red");
+  txt.textContent=msg;
+}
+
+function loadOrders(){
+  setStatus("saving","Caricamento ordini condivisi...");
+  return new Promise((resolve)=>{
+    const cbName = "gavioCallback_"+Date.now();
+    const script = document.createElement("script");
+    const timeout = setTimeout(()=>{
+      setStatus("red","Errore connessione — riprova");
+      orders = JSON.parse(localStorage.getItem("gavio_local_orders")||"{}");
+      delete window[cbName];
+      document.body.removeChild(script);
+      updateBadges();
+      if(activeTab==="mycart") renderMyCart();
+      if(activeTab==="allorders") renderAllOrders();
+      resolve();
+    }, 8000);
+
+    window[cbName] = function(data){
+      clearTimeout(timeout);
+      orders = data || {};
+      localStorage.setItem("gavio_local_orders", JSON.stringify(orders));
+      const n=Object.keys(orders).filter(u=>Object.values(orders[u]||{}).some(q=>q>0)).length;
+      const now=new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"});
+      setStatus("ok",`Connesso — ${n} collega/i con ordini · aggiornato alle ${now}`);
+      const lr=document.getElementById("lastRefresh"); if(lr) lr.textContent=`Aggiornato alle ${now}`;
+      delete window[cbName];
+      document.body.removeChild(script);
+      updateBadges();
+      if(activeTab==="mycart") renderMyCart();
+      if(activeTab==="allorders") renderAllOrders();
+      resolve();
+    };
+    script.src = GAS_URL + "?callback=" + cbName;
+    document.body.appendChild(script);
+  });
+}
+
+async function saveOrders(){
+  localStorage.setItem("gavio_local_orders", JSON.stringify(orders));
+  setStatus("saving","Salvataggio...");
+  try{
+    await fetch(GAS_URL, {
+      method:"POST",
+      mode:"no-cors",
+      headers:{"Content-Type":"text/plain"},
+      body: JSON.stringify(orders)
+    });
+    const n=Object.keys(orders).filter(u=>Object.values(orders[u]||{}).some(q=>q>0)).length;
+    const now=new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"});
+    setStatus("ok",`Salvato — ${n} collega/i con ordini · ${now}`);
+  }catch(e){
+    setStatus("red","Errore salvataggio — riprova");
+  }
+}
+
+// ─── UI ───────────────────────────────────────────────────────────────────────
+function showTab(t){
+  activeTab=t;
+  ["catalog","mycart","allorders"].forEach(x=>{
+    document.getElementById("tab-"+x).style.display=x===t?"block":"none";
+    document.getElementById("nav-"+x).classList.toggle("active",x===t);
+  });
+  if(t==="mycart") renderMyCart();
+  if(t==="allorders"){ loadOrders().then(renderAllOrders); }
+}
+
+function buildSidebarCats(){
+  const el=document.getElementById("sidebarCats");
+  el.innerHTML=["Tutti",...CATS].map(c=>`
+    <div class="nav-item${activeCat===c?" active":""}" onclick="filterCat('${c.replace(/'/g,"\\'")}')">
+      <span style="font-size:12px">${c}</span>
+    </div>`).join("");
+}
+
+function buildChips(){
+  document.getElementById("chips").innerHTML=["Tutti",...CATS].map(c=>
+    `<button class="chip${activeCat===c?" active":""}" onclick="filterCat('${c.replace(/'/g,"\\'")}')">${c}</button>`
+  ).join("");
+}
+
+function filterCat(c){ activeCat=c; buildSidebarCats(); buildChips(); renderProducts(); }
+
+function renderProducts(){
+  const list=PRODUCTS.filter(p=>activeCat==="Tutti"||p.cat===activeCat);
+  let html="",lastCat="";
+  list.forEach(p=>{
+    const idx=PRODUCTS.indexOf(p);
+    if(p.cat!==lastCat){ html+=`<div class="cat-header">${CAT_LABELS[p.cat]||p.cat}</div>`; lastCat=p.cat; }
+    const pa=piva(p), tc=+(pa*p.pzConf).toFixed(2);
+    html+=`<div class="prod-row">
+      <div>
+        <div class="prod-name">${p.name}</div>
+        <div class="prod-meta">${p.pzConf} pz/conf · ${eur(pa)}/cad · ${eur(tc)}/conf</div>
+      </div>
+      <div class="prod-price-tag">${eur(pa)}</div>
+      <div class="qty-wrap"><input class="qty-inp" type="number" min="1" id="qty_${idx}" placeholder="conf."></div>
+      <button class="add-btn" onclick="addToCart(${idx})" title="Aggiungi">+</button>
+    </div>`;
+  });
+  document.getElementById("productList").innerHTML=html||`<div class="empty"><span class="empty-icon">☕</span>Nessun prodotto trovato</div>`;
+}
+
+function showToast(msg){
+  const t=document.getElementById("toast"); t.textContent=msg;
+  t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2000);
+}
+
+async function addToCart(idx){
+  const user=document.getElementById("selUser").value;
+  if(!user){ alert("Seleziona prima il tuo nome in alto!"); return; }
+  const inp=document.getElementById("qty_"+idx);
+  const qty=parseInt(inp.value)||0;
+  if(qty<=0){ alert("Inserisci il numero di confezioni (minimo 1)"); return; }
+  await loadOrders();
+  if(!orders[user]) orders[user]={};
+  orders[user][idx]=(orders[user][idx]||0)+qty;
+  await saveOrders();
+  inp.value=""; updateBadges();
+  const pname=PRODUCTS[idx].name;
+  showToast(`✓ ${qty} conf. aggiunte: "${pname.length>35?pname.substring(0,35)+"…":pname}"`);
+  if(activeTab==="mycart") renderMyCart();
+}
+
+function updateBadges(){
+  const user=document.getElementById("selUser").value;
+  const my=user&&orders[user]?Object.values(orders[user]).reduce((a,b)=>a+b,0):0;
+  document.getElementById("myBadge").textContent=my;
+  document.getElementById("allBadge").textContent=Object.values(orders).reduce((s,u)=>s+Object.values(u).reduce((a,b)=>a+b,0),0);
+}
+
+function renderMyCart(){
+  const user=document.getElementById("selUser").value;
+  const el=document.getElementById("myCartContent");
+  if(!user){ el.innerHTML=`<div class="empty"><span class="empty-icon">👤</span>Seleziona il tuo nome in alto</div>`; return; }
+  const keys=Object.keys(orders[user]||{}).filter(k=>orders[user][k]>0);
+  if(!keys.length){ el.innerHTML=`<div class="empty"><span class="empty-icon">🛒</span>Nessun prodotto aggiunto ancora.<br>Vai al Catalogo e aggiungi le tue cialde!</div>`; return; }
+  let total=0;
+  let html=`<div class="cart-hdr"><span>Prodotto</span><span style="text-align:center">Conf.</span><span style="text-align:center">Pz tot.</span><span style="text-align:right">Totale</span><span></span></div>`;
+  keys.forEach(k=>{
+    const p=PRODUCTS[k],q=orders[user][k],tot=totC(p,q); total+=tot;
+    html+=`<div class="cart-row">
+      <span>${p.name}</span>
+      <span style="text-align:center;font-family:'DM Mono',monospace">${q}</span>
+      <span style="text-align:center;font-family:'DM Mono',monospace">${q*p.pzConf}</span>
+      <span style="text-align:right;font-family:'DM Mono',monospace;font-weight:500">${eur(tot)}</span>
+      <button class="rm-btn" onclick="removeItem('${user}',${k})">×</button>
+    </div>`;
+  });
+  html+=`<div class="total-card"><span class="total-label">Totale mio ordine (IVA incl.)</span><span class="total-amount">${eur(total)}</span></div>`;
+  html+=`<div class="actions"><button class="btn btn-red" onclick="clearMyCart()">🗑 Svuota il mio ordine</button></div>`;
+  el.innerHTML=html;
+}
+
+async function removeItem(user,idx){
+  if(orders[user]){ delete orders[user][idx]; await saveOrders(); updateBadges(); renderMyCart(); }
+}
+async function clearMyCart(){
+  const user=document.getElementById("selUser").value;
+  if(!user||!confirm("Svuotare il tuo ordine?")) return;
+  orders[user]={}; await saveOrders(); updateBadges(); renderMyCart();
+}
+
+function renderAllOrders(){
+  const el=document.getElementById("allOrdersContent");
+  const users=Object.keys(orders).filter(u=>Object.values(orders[u]||{}).some(q=>q>0));
+  if(!users.length){ el.innerHTML=`<div class="empty"><span class="empty-icon">📋</span>Nessun ordine inserito ancora</div>`; return; }
+  const agg=buildAgg(); let grand=0;
+  Object.entries(agg).forEach(([k,q])=>{ grand+=totC(PRODUCTS[k],q); });
+
+  let html=`<div class="sec-title">Riepilogo per persona</div>`;
+  users.forEach(u=>{
+    const keys=Object.keys(orders[u]||{}).filter(k=>orders[u][k]>0);
+    let uT=0; keys.forEach(k=>{ uT+=totC(PRODUCTS[k],orders[u][k]); });
+    html+=`<div class="person-card"><div class="person-hdr"><span class="person-name">${u}</span><span class="person-tot">${eur(uT)}</span></div>`;
+    keys.forEach(k=>{ const p=PRODUCTS[k],q=orders[u][k]; html+=`<div class="person-item">· ${p.name} — ${q} conf. (${q*p.pzConf} pz) → ${eur(totC(p,q))}</div>`; });
+    html+=`</div>`;
+  });
+
+  html+=`<div class="sec-title">Ordine aggregato</div>`;
+  html+=`<div class="cart-hdr" style="grid-template-columns:1fr 56px 68px 84px"><span>Prodotto</span><span style="text-align:center">Conf.</span><span style="text-align:center">Pz tot.</span><span style="text-align:right">Totale</span></div>`;
+  Object.entries(agg).forEach(([k,q])=>{
+    const p=PRODUCTS[k],tot=totC(p,q);
+    html+=`<div class="cart-row" style="grid-template-columns:1fr 56px 68px 84px">
+      <span>${p.name}</span>
+      <span style="text-align:center;font-family:'DM Mono',monospace">${q}</span>
+      <span style="text-align:center;font-family:'DM Mono',monospace">${q*p.pzConf}</span>
+      <span style="text-align:right;font-family:'DM Mono',monospace;font-weight:500">${eur(tot)}</span>
+    </div>`;
+  });
+  html+=`<div class="grand-card"><span style="font-size:13px;color:var(--text2)">Totale complessivo IVA inclusa</span><span style="font-size:20px;font-weight:600;font-family:'DM Mono',monospace;color:var(--accent)">${eur(grand)}</span></div>`;
+
+  html+=`<div class="actions">
+    <div class="actions-label">📄 Da inviare al fornitore</div>
+    <button class="btn btn-green" onclick="printFornitore()">🖨 PDF ordine fornitore</button>
+    <div class="actions-label" style="margin-top:8px">💶 Uso interno — rimborsi</div>
+    <button class="btn btn-blue" onclick="printRipartizione()">🖨 PDF ripartizione colleghi</button>
+    <div class="actions-label" style="margin-top:8px"></div>
+    <button class="btn btn-red" onclick="resetAll()">⚠ Azzera tutti gli ordini</button>
+    <button class="btn" onclick="loadOrders().then(renderAllOrders)" style="margin-left:auto">↻ Aggiorna</button>
+  </div>`;
+  el.innerHTML=html;
+}
+
+function buildAgg(){
+  const agg={};
+  Object.keys(orders).filter(u=>Object.values(orders[u]||{}).some(q=>q>0))
+    .forEach(u=>{ Object.entries(orders[u]||{}).forEach(([k,q])=>{ if(q>0) agg[k]=(agg[k]||0)+q; }); });
+  return agg;
+}
+
+// ─── PDF helpers ──────────────────────────────────────────────────────────────
+function headerHTML(today){
+  return `<table style="margin-bottom:8px;width:100%;border-collapse:collapse"><tr>
+    <td style="width:30%"><span style="font-size:14pt;font-weight:900;color:${NAVY}">selecta</span></td>
+    <td style="text-align:center"><div style="background:${RED};color:white;font-weight:bold;font-size:11pt;padding:5px 0;letter-spacing:1px">MODULO ORDINE GRUPPO GAVIO</div></td>
+    <td style="width:30%"></td>
+  </tr></table>
+  <table style="margin-bottom:3px;width:100%;border-collapse:collapse;border:0.5px solid #AAA">
+    <tr><td style="padding:2px 5px 1px;font-size:7pt;font-weight:bold;color:${NAVY}">INDICARE ODA</td></tr>
+    <tr><td style="height:16px;border-top:0.5px solid #AAA"></td></tr>
+  </table>
+  <table style="margin-bottom:3px;width:100%;border-collapse:collapse;border:0.5px solid #AAA"><tr>
+    <td style="width:50%;padding:2px 5px 1px;font-size:7pt;font-weight:bold;color:${NAVY};border-right:0.5px solid #AAA">INDICARE CENTRO SPESA</td>
+    <td style="padding:2px 5px 1px;font-size:7pt;font-weight:bold;color:${NAVY}">SOCIETÀ</td>
+  </tr><tr>
+    <td style="height:16px;border-top:0.5px solid #AAA;border-right:0.5px solid #AAA"></td>
+    <td style="height:16px;padding:2px 5px;font-size:9pt;font-weight:bold;color:${NAVY};border-top:0.5px solid #AAA">PRESSO SATAP</td>
+  </tr></table>
+  <table style="margin-bottom:3px;width:100%;border-collapse:collapse;border:0.5px solid #AAA"><tr>
+    <td style="width:50%;padding:2px 5px 1px;font-size:7pt;font-weight:bold;color:${NAVY};border-right:0.5px solid #AAA">INDIRIZZO DI CONSEGNA</td>
+    <td style="padding:2px 5px 1px;font-size:7pt;font-weight:bold;color:${NAVY}">UBICAZIONE</td>
+  </tr><tr>
+    <td style="height:16px;padding:2px 5px;font-size:9pt;font-weight:bold;color:${NAVY};border-top:0.5px solid #AAA;border-right:0.5px solid #AAA">VIA BONZANIGO 22, TORINO</td>
+    <td style="border-top:0.5px solid #AAA"></td>
+  </tr></table>
+  <table style="margin-bottom:8px;width:100%;border-collapse:collapse;border:0.5px solid #AAA"><tr>
+    <td style="width:34%;padding:2px 5px 1px;font-size:7pt;font-weight:bold;color:${NAVY};border-right:0.5px solid #AAA">NOMINATIVO REFERENTE</td>
+    <td style="width:33%;padding:2px 5px 1px;font-size:7pt;font-weight:bold;color:${NAVY};border-right:0.5px solid #AAA">TELEFONO</td>
+    <td style="padding:2px 5px 1px;font-size:7pt;font-weight:bold;color:${NAVY}">DATA CONSEGNA</td>
+  </tr><tr>
+    <td style="height:16px;padding:2px 5px;font-size:9pt;font-weight:bold;color:${NAVY};border-top:0.5px solid #AAA;border-right:0.5px solid #AAA">IVAN RAMOS-C.</td>
+    <td style="border-top:0.5px solid #AAA;border-right:0.5px solid #AAA"></td>
+    <td style="border-top:0.5px solid #AAA;padding:2px 5px;font-size:9pt">${today}</td>
+  </tr></table>`;
+}
+
+function printFornitore(){
+  const agg=buildAgg();
+  if(!Object.keys(agg).length){ alert("Nessun ordine."); return; }
+  const today=new Date().toLocaleDateString("it-IT");
+  let rows="",lc="",gt=0,tc=0;
+  PRODUCTS.forEach((p,i)=>{
+    if(p.cat!==lc){ rows+=`<tr><td colspan="5" style="background:${GRAY};font-weight:bold;color:${NAVY};padding:4px 6px;font-size:9pt">${CAT_LABELS[p.cat]||p.cat}</td></tr>`; lc=p.cat; }
+    const qty=agg[i]||0,pa=piva(p),tot=+(pa*p.pzConf*qty).toFixed(2);
+    gt+=tot; tc+=qty;
+    rows+=`<tr style="background:${i%2===0?"#F5F5F5":"#FFF"}">
+      <td style="padding:3px 6px;font-size:8pt">${p.name}</td>
+      <td style="text-align:center;font-size:8pt">${p.pzConf}</td>
+      <td style="text-align:center;font-size:8.5pt;font-weight:${qty?"bold":"normal"}">${qty||""}</td>
+      <td style="text-align:right;font-size:8pt">${eur(pa)}</td>
+      <td style="text-align:right;font-size:8pt;font-weight:${qty?"bold":"normal"}">${qty?eur(tot):eur(0)}</td>
+    </tr>`;
+  });
+  openWin(`<!DOCTYPE html><html lang="it"><head><meta charset="utf-8"><title>Ordine Gavio ${today}</title>
+  <style>body{font-family:Arial,sans-serif;margin:0;padding:0}table{width:100%;border-collapse:collapse}td,th{vertical-align:middle}@page{size:A4;margin:12mm 13mm}@media print{.np{display:none}}</style>
+  </head><body>${headerHTML(today)}
+  <table style="border:0.5px solid #BBB"><thead><tr style="background:${NAVY}">
+    <th style="color:white;padding:5px 6px;text-align:left;font-size:8pt;width:48%">DESCRIZIONE PRODOTTO</th>
+    <th style="color:white;padding:5px 4px;text-align:center;font-size:7.5pt;width:9%">PZ. PER<br>CONF.</th>
+    <th style="color:white;padding:5px 4px;text-align:center;font-size:7.5pt;width:13%">QUANTITA'<br>(n. confezioni)</th>
+    <th style="color:white;padding:5px 4px;text-align:right;font-size:7.5pt;width:15%">PREZZO CAD.<br>IVA incl. (+10%)</th>
+    <th style="color:white;padding:5px 4px;text-align:right;font-size:7.5pt;width:15%">TOTALE<br>IVA inclusa</th>
+  </tr></thead><tbody>${rows}
+    <tr style="background:${NAVY}">
+      <td colspan="2" style="color:white;font-weight:bold;padding:5px 6px;font-size:9pt">TOTALE IVA inclusa</td>
+      <td style="color:white;font-weight:bold;text-align:center;font-size:9pt">${tc}</td><td></td>
+      <td style="color:white;font-weight:bold;text-align:right;font-size:9pt">${eur(gt)}</td>
+    </tr>
+  </tbody></table>
+  <p style="font-size:7pt;color:#666;margin-top:5px">* Prezzi IVA inclusa al 10%. I prezzi al fornitore sono IVA esclusa.</p>
+  <div class="np" style="margin-top:20px;text-align:center">
+    <button onclick="window.print()" style="padding:10px 30px;background:${NAVY};color:white;border:none;border-radius:6px;font-size:14px;cursor:pointer">Salva come PDF / Stampa</button>
+  </div></body></html>`);
+}
+
+function printRipartizione(){
+  const users=Object.keys(orders).filter(u=>Object.values(orders[u]||{}).some(q=>q>0));
+  if(!users.length){ alert("Nessun ordine."); return; }
+  const today=new Date().toLocaleDateString("it-IT");
+  const agg=buildAgg(); let gt=0;
+  Object.entries(agg).forEach(([k,q])=>{ gt+=totC(PRODUCTS[k],q); });
+  let ppRows="";
+  users.forEach(u=>{
+    const keys=Object.keys(orders[u]||{}).filter(k=>orders[u][k]>0);
+    let uT=0; keys.forEach(k=>{ uT+=totC(PRODUCTS[k],orders[u][k]); });
+    ppRows+=`<tr><td colspan="4" style="background:${NAVY};color:white;font-weight:bold;padding:5px 6px;font-size:9pt">${u} &nbsp;—&nbsp; da rimborsare a I.RAMOS-C.: ${eur(uT)}</td></tr>`;
+    keys.forEach((k,ri)=>{
+      const p=PRODUCTS[k],q=orders[u][k],tot=totC(p,q);
+      ppRows+=`<tr style="background:${ri%2===0?"#F5F5F5":"#FFF"}"><td style="padding:3px 6px 3px 14px;font-size:7.5pt">${p.name}</td><td style="text-align:center;font-size:7.5pt">${q} conf.</td><td style="text-align:center;font-size:7.5pt">${q*p.pzConf} pz</td><td style="text-align:right;font-size:7.5pt;font-weight:bold">${eur(tot)}</td></tr>`;
+    });
+  });
+  openWin(`<!DOCTYPE html><html lang="it"><head><meta charset="utf-8"><title>Ripartizione Gavio ${today}</title>
+  <style>body{font-family:Arial,sans-serif;margin:0;padding:0}table{width:100%;border-collapse:collapse}td,th{vertical-align:middle}@page{size:A4;margin:12mm 13mm}@media print{.np{display:none}}</style>
+  </head><body>
+  <table style="margin-bottom:10px;width:100%;border-collapse:collapse"><tr>
+    <td><span style="font-size:14pt;font-weight:900;color:${NAVY}">selecta</span></td>
+    <td style="text-align:center"><div style="background:${RED};color:white;font-weight:bold;font-size:11pt;padding:5px 0;letter-spacing:1px">RIPARTIZIONE SPESA — ORDINE GAVIO</div></td>
+    <td style="width:30%"></td>
+  </tr></table>
+  <table style="margin-bottom:10px;width:100%;border-collapse:collapse;border:0.5px solid #AAA"><tr>
+    <td style="padding:5px 8px;font-size:8.5pt">Data: <strong>${today}</strong></td>
+    <td style="padding:5px 8px;font-size:8.5pt">Pagato da: <strong>IVAN RAMOS-C.</strong></td>
+    <td style="padding:5px 8px;font-size:8.5pt;text-align:right">Totale IVA incl.: <strong style="color:${NAVY};font-size:10pt">${eur(gt)}</strong></td>
+  </tr></table>
+  <table style="border:0.5px solid #BBB"><thead><tr style="background:${NAVY}">
+    <th style="color:white;padding:5px 6px;text-align:left;font-size:8pt">Prodotto</th>
+    <th style="color:white;padding:5px 4px;text-align:center;font-size:8pt">Quantità</th>
+    <th style="color:white;padding:5px 4px;text-align:center;font-size:8pt">Pezzi tot.</th>
+    <th style="color:white;padding:5px 4px;text-align:right;font-size:8pt">Importo IVA incl.</th>
+  </tr></thead><tbody>${ppRows}</tbody></table>
+  <p style="font-size:7pt;color:#666;margin-top:5px">* Importi IVA inclusa al 10%. Si prega di rimborsare I.RAMOS-C. entro la ricezione della merce.</p>
+  <div class="np" style="margin-top:20px;text-align:center">
+    <button onclick="window.print()" style="padding:10px 30px;background:${NAVY};color:white;border:none;border-radius:6px;font-size:14px;cursor:pointer">Salva come PDF / Stampa</button>
+  </div></body></html>`);
+}
+
+function openWin(html){
+  const w=window.open("","_blank","width=920,height=750");
+  if(w){ w.document.write(html); w.document.close(); }
+  else alert("Pop-up bloccato — consenti i pop-up per questo sito.");
+}
+
+async function resetAll(){
+  if(!confirm("ATTENZIONE: azzerare TUTTI gli ordini di tutti i colleghi?\nQuesta operazione non è reversibile.")) return;
+  orders={}; await saveOrders(); updateBadges(); renderAllOrders();
+}
+
+document.getElementById("selUser").addEventListener("change",()=>{ updateBadges(); if(activeTab==="mycart") renderMyCart(); });
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+async function init(){
+  loadConfig();
+  if(!apiKey||!binId){
+    document.getElementById("configNotice").classList.remove("hidden");
+    setStatus("red","Storage non configurato — clicca ⚙ Config per attivare la condivisione");
+  }
+  await loadOrders();
+  buildSidebarCats();
+  buildChips();
+  renderProducts();
+  updateBadges();
+  // Auto-refresh ogni 2 minuti
+  setInterval(()=>{ if(activeTab==="allorders") loadOrders().then(renderAllOrders); else loadOrders(); }, 120000);
+}
+init();
+</script>
+</body>
+</html>
