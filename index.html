@@ -405,8 +405,8 @@ const NAVY="#1F3864", RED="#C00000", GRAY="#D9D9D9";
 const PRODUCTS = [
   {cat:"Acqua", name:"ACQUA PET 500ML FRIZZANTE", pzConf:24, price:0.30},
   {cat:"Acqua", name:"ACQUA PET 500ML NATURALE", pzConf:24, price:0.30},
-  {cat:"Bicchieri", name:"BICCHIERI DI CARTA 100 CC", pzConf:50, price:2.50},
-  {cat:"Bicchieri", name:"BICCHIERI DI CARTA BIO 160 CC", pzConf:100, price:5.00},
+  {cat:"Bicchieri", name:"BICCHIERI DI CARTA 100 CC", pzConf:50, price:2.50, pricePerConf:true},
+  {cat:"Bicchieri", name:"BICCHIERI DI CARTA BIO 160 CC", pzConf:100, price:5.00, pricePerConf:true},
   {cat:"Illy Iperespresso", name:"ILLY ESPRESSO CLASSICO", pzConf:30, price:0.41},
   {cat:"Illy Iperespresso", name:"ILLY ESPRESSO LUNGO", pzConf:30, price:0.41},
   {cat:"Illy Iperespresso", name:"ILLY ESPRESSO INTENSO", pzConf:30, price:0.41},
@@ -445,7 +445,7 @@ const PRODUCTS = [
   {cat:"Nespresso", name:"CIALDA NESPRESSO CAFFE ESPRESSO LEGGERO", pzConf:50, price:0.41},
   {cat:"Nespresso", name:"CIALDA NESPRESSO CAFFE' DECAFFEINATO", pzConf:50, price:0.41},
   {cat:"Nespresso", name:"CIALDA NESPRESSO RISTRETTO ORIGIN INDIA", pzConf:50, price:0.41},
-  {cat:"Accessori", name:"ACCESSORI 50 palette + 50 zucchero + 50 palette", pzConf:1, price:2.50},
+  {cat:"Accessori", name:"ACCESSORI 50 palette + 50 zucchero + 50 palette", pzConf:1, price:2.50, pricePerConf:true},
 ];
 
 const CATS = [...new Set(PRODUCTS.map(p=>p.cat))];
@@ -462,7 +462,9 @@ let activeCat="Tutti", orders={}, activeTab="catalog";
 const GAS_URL="https://script.google.com/macros/s/AKfycbxyI59YM9bg6KuxX2CnQFfvDse38ZuYY0UsvfPUPZVkcPhzg4G0vyUbWRyL__8kdloZ/exec";
 
 function piva(p){ return +(p.price*(1+IVA)).toFixed(4); }
-function totC(p,q){ return +(piva(p)*p.pzConf*q).toFixed(2); }
+function pivaUnit(p){ return p.pricePerConf ? +(p.price*(1+IVA)/p.pzConf).toFixed(4) : piva(p); }
+function totC(p,q){ return p.pricePerConf ? +(p.price*(1+IVA)*q).toFixed(2) : +(piva(p)*p.pzConf*q).toFixed(2); }
+function priceTag(p){ return p.pricePerConf ? eur(p.price*(1+IVA))+" /conf" : eur(piva(p))+" /cad"; }
 function eur(v){ return "€ "+v.toFixed(2).replace(".",","); }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
@@ -572,13 +574,13 @@ function renderProducts(){
   list.forEach(p=>{
     const idx=PRODUCTS.indexOf(p);
     if(p.cat!==lastCat){ html+=`<div class="cat-header">${CAT_LABELS[p.cat]||p.cat}</div>`; lastCat=p.cat; }
-    const pa=piva(p), tc=+(pa*p.pzConf).toFixed(2);
+    const tc=totC(p,1);
     html+=`<div class="prod-row">
       <div>
         <div class="prod-name">${p.name}</div>
-        <div class="prod-meta">${p.pzConf} pz/conf · ${eur(pa)}/cad · ${eur(tc)}/conf</div>
+        <div class="prod-meta">${p.pzConf} pz/conf · ${priceTag(p)} · ${eur(tc)}/conf</div>
       </div>
-      <div class="prod-price-tag">${eur(pa)}</div>
+      <div class="prod-price-tag">${priceTag(p)}</div>
       <div class="qty-wrap"><input class="qty-inp" type="number" min="1" id="qty_${idx}" placeholder="conf."></div>
       <button class="add-btn" onclick="addToCart(${idx})" title="Aggiungi">+</button>
     </div>`;
@@ -737,13 +739,14 @@ function printFornitore(){
   let rows="",lc="",gt=0,tc=0;
   PRODUCTS.forEach((p,i)=>{
     if(p.cat!==lc){ rows+=`<tr><td colspan="5" style="background:${GRAY};font-weight:bold;color:${NAVY};padding:4px 6px;font-size:9pt">${CAT_LABELS[p.cat]||p.cat}</td></tr>`; lc=p.cat; }
-    const qty=agg[i]||0,pa=piva(p),tot=+(pa*p.pzConf*qty).toFixed(2);
+    const qty=agg[i]||0,pa=piva(p),tot=totC(p,qty);
     gt+=tot; tc+=qty;
+    const paDisplay = p.pricePerConf ? eur(pa)+" /cf" : eur(pa);
     rows+=`<tr style="background:${i%2===0?"#F5F5F5":"#FFF"}">
       <td style="padding:3px 6px;font-size:8pt">${p.name}</td>
       <td style="text-align:center;font-size:8pt">${p.pzConf}</td>
       <td style="text-align:center;font-size:8.5pt;font-weight:${qty?"bold":"normal"}">${qty||""}</td>
-      <td style="text-align:right;font-size:8pt">${eur(pa)}</td>
+      <td style="text-align:right;font-size:8pt">${paDisplay}</td>
       <td style="text-align:right;font-size:8pt;font-weight:${qty?"bold":"normal"}">${qty?eur(tot):eur(0)}</td>
     </tr>`;
   });
